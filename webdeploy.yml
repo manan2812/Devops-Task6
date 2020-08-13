@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webdeploy
+  labels:
+    app: webdeploy
+spec:
+  ports:
+  - port: 80
+    nodePort: 30010
+  selector:
+    app: webdeploy
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: web-pvc
+  labels:
+    app: webdeploy
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: webdeploy
+   labels:
+     app: webdeploy
+spec:
+   selector:
+     matchLabels:
+         app: webdeploy
+   replicas: 1
+   template:
+     metadata:
+         labels:
+            app: webdeploy
+     spec:
+         containers:
+         -  image: vimal13/apache-webserver-php
+            name: webdeploy
+            ports:
+            -  containerPort: 80
+               name: webdeploy
+            volumeMounts:
+            -  name: webdeploy-pv
+               mountPath: /var/www/html
+         volumes:
+         -  name: webdeploy-pv
+            persistentVolumeClaim:
+               claimName: web-pvc
